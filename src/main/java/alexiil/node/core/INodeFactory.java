@@ -14,7 +14,7 @@
 package alexiil.node.core;
 
 public interface INodeFactory<T> {
-    INode createNode(T value);
+    INode createNode(NodeGraph graph, T value);
 
     Class<T> getClassType();
 }

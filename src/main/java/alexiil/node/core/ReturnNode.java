@@ -15,29 +15,40 @@ package alexiil.node.core;
 
 import com.google.common.base.Supplier;
 
+import alexiil.node.core.NodeGraph.GraphConnection;
+
 public class ReturnNode<V> extends AbstractNode implements Supplier<V> {
     private final Class<V> clazz;
     private final Supplier<V> in;
+    private final GraphConnection<V> connection;
 
     public ReturnNode(Class<V> clazz) {
+        this(null, clazz);
+    }
+
+    public ReturnNode(NodeGraph graph, Class<V> clazz) {
+        super(graph);
         this.clazz = clazz;
-        addInput("val", clazz);
+        connection = addInput("val", clazz);
         in = getInputSupplier("val");
     }
 
     @Override
-    public AbstractNode createCopy() {
-        return new ReturnNode<V>(clazz);
+    public AbstractNode createCopy(NodeGraph graph) {
+        return new ReturnNode<V>(graph, clazz);
     }
 
     @Override
-    protected void computeNext() {
+    protected boolean computeNext() {
         hasComputed = name;
+        return false;
     }
 
     @Override
     public V get() {
         try {
+            connection.requestUpTo(1);
+            getGraph().iterate();
             return in.get();
         } catch (Throwable t) {
             throw new IllegalStateException("Could not GET for " + name, t);

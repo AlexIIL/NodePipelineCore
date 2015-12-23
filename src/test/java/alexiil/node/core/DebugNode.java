@@ -22,23 +22,29 @@ public class DebugNode extends AbstractNode {
     private final Supplier<Object> itVal;
 
     public DebugNode(Consumer<String> logger) {
+        this(null, logger);
+    }
+
+    public DebugNode(NodeGraph graph, Consumer<String> logger) {
+        super(graph);
         this.logger = logger;
         addInput("val", Object.class);
         itVal = getInputSupplier("val");
     }
 
     @Override
-    protected void computeNext() {
+    protected boolean computeNext() {
         hasComputed = name;
         try {
             logger.accept(name + ": " + itVal.get().toString());
         } catch (Throwable t) {
             throw new IllegalStateException("Could not GET for " + name, t);
         }
+        return false;
     }
 
     @Override
-    public DebugNode createCopy() {
-        return new DebugNode(logger);
+    public AbstractNode createCopy(NodeGraph graph) {
+        return new DebugNode(graph, logger);
     }
 }

@@ -13,12 +13,16 @@
  * the contents of https://raw.githubusercontent.com/AlexIIL/NodePipelineCore/master/LICENSE */
 package alexiil.node.core.test;
 
+import org.junit.Test;
+
 import alexiil.node.core.*;
 import alexiil.node.core.math.MathNodes;
 import alexiil.node.core.math.SimpleMathNode.LongNode;
 
-public class MainTester {
-    public static void main(String[] args) {
+public class MathTester {
+
+    @Test
+    public void testComplexMathGraph() {
         NodeRegistry reg = new NodeRegistry();
         MathNodes.populateRegistry(reg);
 
@@ -62,11 +66,6 @@ public class MainTester {
         graph.connectIO(thirdAdder, "ans", fifthAdder, "a");
         graph.connectIO(forthAdder, "ans", fifthAdder, "b");
 
-        // LongNode adder = graph.addCopyOf(MathNodes.longAdder);
-        // adder.name = "adder";
-        // graph.connectIO(oneNode, "val", adder, "a");
-        // graph.connectIO(oneNode, "val", adder, "b");
-
         DebugNode debugNode = graph.addCopyOf(new DebugNode(System.out::println));
         debugNode.name = "debug";
         ReturnNode<Long> returnNode = graph.addCopyOf(new ReturnNode<>(Long.class));
@@ -74,9 +73,6 @@ public class MainTester {
 
         graph.connectIO(fifthAdder, "ans", debugNode, "val");
         graph.connectIO(fifthAdder, "ans", returnNode, "val");
-
-        // graph.connectIO(adder, "ans", debugNode, "val");
-        // graph.connectIO(adder, "ans", returnNode, "val");
 
         try {
             System.out.println("Returned " + returnNode.get());

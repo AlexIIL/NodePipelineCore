@@ -13,21 +13,21 @@
  * the contents of https://raw.githubusercontent.com/AlexIIL/NodePipelineCore/master/LICENSE */
 package alexiil.node.core;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Queues;
-import com.google.common.collect.Sets;
+
+import alexiil.node.core.NodeGraph.GraphConnection;
 
 /** A simple, mutable node. Will automatically handle inputs and outputs for you, provided you handle cloning
  * properly. */
 public abstract class AbstractNode implements INode {
-    private final Map<String, SimpleInput<?>> inputs, unmodifiableInputs;
-    private final Map<String, SimpleOutput<?>> outputs, unmodifiableOutputs;
-
-    private final Map<String, Consumer<?>> internalOutputs;
+    private final Map<String, GraphConnection<?>> inputs, unmodifiableInputs;
+    private final Map<String, GraphConnection<?>> outputs, unmodifiableOutputs;
+    private final NodeGraph graph;
 
     // DEBUG!
     public String hasComputed = null;
@@ -35,223 +35,119 @@ public abstract class AbstractNode implements INode {
     public String name;
 
     public AbstractNode() {
+        this(null);
+    }
+
+    public AbstractNode(NodeGraph graph) {
+        this.graph = graph;
         inputs = Maps.newHashMap();
         outputs = Maps.newHashMap();
         unmodifiableInputs = Collections.unmodifiableMap(inputs);
         unmodifiableOutputs = Collections.unmodifiableMap(outputs);
-        internalOutputs = Maps.newHashMap();
     }
 
     @Override
-    public Map<String, ? extends IInput<?>> getInputs() {
+    public Map<String, GraphConnection<?>> getInputs() {
         return unmodifiableInputs;
     }
 
     @Override
-    public Map<String, ? extends IOutput<?>> getOutputs() {
+    public Map<String, GraphConnection<?>> getOutputs() {
         return unmodifiableOutputs;
     }
 
     @Override
-    public AbstractNode createCopy() {
+    public AbstractNode createCopy(NodeGraph graph) {
         throw new IllegalStateException("The subclass " + getClass() + " should override the createCopy method!");
     }
 
-    public <I> void addInput(String name, Class<I> inputType) {
-        SimpleInput<I> input = new SimpleInput<I>(inputType);
-        inputs.put(name, input);
+    @Override
+    public NodeGraph getGraph() {
+        return graph;
     }
 
-    public <O> void addOutput(String name, Class<O> outputType) {
-        SimpleOutput<O> output = new SimpleOutput<>(outputType);
-        outputs.put(name, output);
-        Consumer<O> consumer = val -> output.sendValue(val);
-        internalOutputs.put(name, consumer);
+    public <I> GraphConnection<I> addInput(String name, Class<I> inputType) {
+        if (graph == null) {
+            inputs.put(name, null);
+            return null;
+        } else {
+            GraphConnection<I> connection = graph.provideInputConnection(this, name, inputType);
+            inputs.put(name, connection);
+            return connection;
+        }
+    }
+
+    public <O> GraphConnection<O> addOutput(String name, Class<O> outputType) {
+        if (graph == null) {
+            outputs.put(name, null);
+            return null;
+        } else {
+            GraphConnection<O> connection = graph.provideOutputConnection(this, name, outputType);
+            outputs.put(name, connection);
+            return connection;
+        }
     }
 
     protected <I> Supplier<I> getInputSupplier(String name) {
         @SuppressWarnings("unchecked")
-        final SimpleInput<I> input = (SimpleInput<I>) inputs.get(name);
-        return () -> {
-            if (input.internalDeque.isEmpty())
-                input.getOutput().requestImmediatly();
-            return input.internalDeque.pop();
-        };
+        final GraphConnection<I> input = (GraphConnection<I>) inputs.get(name);
+        return () -> input.pop();
     }
 
-    /** Tells you that everything you need exists for all the inputs */
-    protected abstract void computeNext();
-
-    boolean out = true;
+    /** Tells you that everything you need exists for all the inputs.
+     * 
+     * @return True if you pushed anything to any outputs. */
+    protected abstract boolean computeNext();
 
     @Override
-    public void requestOutput() {
-        out = false;
-        // All of the nodes we have already requested from- we don't want to request from them twice
-        Set<INode> requested = new HashSet<>();
-        for (SimpleInput<?> in : inputs.values()) {
-            if (in.internalDeque.isEmpty()) {
-                IOutput<?> out = in.getOutput();
-                if (requested.contains(out.getHolder()))
-                    continue;
-                requested.add(out.getHolder());
-                System.out.println("State of " + name + " before requesting from " + ((AbstractNode) out.getHolder()).name);
-                AbstractNode.this.printState();
-                out.requestImmediatly();
-            }
+    public void askForElements() {
+        // This implements a "simple" node- that requires exactly 1 of each input to make exactly 1 of each output.
+        int required = 0;
+        for (GraphConnection<?> out : outputs.values()) {
+            required = Math.max(required, out.getRequestedElements());
         }
-        // Lots of computational madness...
+        // We don't actually need any elements- just ignore it then
+        if (required == 0)
+            return;
 
-        // It feels like the state pushes values and computes them, before returning and recomputing them because the
-        // input queue is empty....
-        if (!out) {
-            System.out.println("State of " + name + " before computing");
-            AbstractNode.this.printState();
-            // It is possible that the inputs did not compute so just check all of them to see
-            computeIfCan();
-            System.out.println("State of " + name + " AFTER computing");
-            AbstractNode.this.printState();
-            out = true;
+        for (GraphConnection<?> in : inputs.values()) {
+            in.requestUpTo(required);
         }
     }
 
-    /** @return True if the outputs were successfully computed */
-    private void computeIfCan() {
-        if (hasComputed != null)
-            throw new IllegalStateException("ALREADY COMPUTED!");
-        for (SimpleInput<?> in : inputs.values()) {
-            if (in.internalDeque.isEmpty())
-                return;
+    /** @return True if you pushed anything to any outputs. */
+    @Override
+    public boolean computeIfCan() {
+        for (GraphConnection<?> in : inputs.values()) {
+            if (in.getRemainingElements() <= 0)
+                return false;
         }
-        computeNext();
+        System.out.println("State of " + name + " before computing");
+        printState();
+
+        boolean b = computeNext();
+
+        System.out.println("State of " + name + " AFTER computing");
+        printState();
+
+        return b;
     }
 
     @SuppressWarnings("unchecked")
     protected <O> Consumer<O> getOutputConsumer(String name) {
-        return (Consumer<O>) internalOutputs.get(name);
+        final GraphConnection<O> connection = (GraphConnection<O>) outputs.get(name);
+        return connection == null ? null : connection::push;
     }
 
     // DEBUG
     public void printState() {
-        System.out.println("  Inputs:");
-        for (Entry<String, SimpleInput<?>> entry : inputs.entrySet()) {
-            System.out.println("   - " + entry.getKey() + " = " + entry.getValue().internalDeque);
+        System.out.println(" Inputs:");
+        for (Entry<String, GraphConnection<?>> entry : inputs.entrySet()) {
+            System.out.println(" - " + entry.getKey() + " = " + entry.getValue());
         }
-        System.out.println("  Outputs:");
-        for (Entry<String, SimpleOutput<?>> entry : outputs.entrySet()) {
-            System.out.println("   - " + entry.getKey());
-        }
-    }
-
-    private class SimpleInput<I> implements IInput<I> {
-        private final Class<I> inputClass;
-        private final Deque<I> internalDeque = Queues.newArrayDeque();
-        private IOutput<? extends I> output;
-
-        public SimpleInput(Class<I> inputClass) {
-            this.inputClass = inputClass;
-        }
-
-        @Override
-        public void accept(I t) {
-            System.out.println("State of " + name + " before pushing");
-            AbstractNode.this.printState();
-            internalDeque.push(t);
-            System.out.println("State of " + name + " AFTER pushing");
-            AbstractNode.this.printState();
-            computeIfCan();
-        }
-
-        @Override
-        public void processInput() {
-            // computeIfCan();
-        }
-
-        @Override
-        public Class<I> getInputClass() {
-            return inputClass;
-        }
-
-        @Override
-        public void setOutput(IOutput<? extends I> out) {
-            this.output = out;
-        }
-
-        @Override
-        public IOutput<? extends I> getOutput() {
-            return output;
-        }
-
-        @Override
-        public String toString() {
-            final int maxLen = 10;
-            return "SimpleInput [inputClass=" + inputClass + ", internalDeque=" + (internalDeque != null ? toString(internalDeque, maxLen) : null)
-                + ", AbstractNode$this=" + AbstractNode.this + "]";
-        }
-
-        private String toString(Collection<?> collection, int maxLen) {
-            StringBuilder builder = new StringBuilder();
-            builder.append("[");
-            int i = 0;
-            for (Iterator<?> iterator = collection.iterator(); iterator.hasNext() && i < maxLen; i++) {
-                if (i > 0)
-                    builder.append(", ");
-                builder.append(iterator.next());
-            }
-            builder.append("]");
-            return builder.toString();
-        }
-
-        @Override
-        public INode getHolder() {
-            return AbstractNode.this;
-        }
-    }
-
-    private class SimpleOutput<O> implements IOutput<O> {
-        private final Class<O> outputClass;
-        private final Set<IInput<? super O>> inputSet = Sets.newHashSet();
-
-        public SimpleOutput(Class<O> outputClass) {
-            this.outputClass = outputClass;
-        }
-
-        @Override
-        public void connect(IInput<? super O> consumer) {
-            inputSet.add(consumer);
-            consumer.setOutput(this);
-        }
-
-        @Override
-        public void disconnect() {
-            inputSet.clear();
-        }
-
-        @Override
-        public void requestImmediatly() {
-            try {
-                requestOutput();
-            } catch (Throwable t) {
-                throw new IllegalStateException("Thrown for " + AbstractNode.this.name, t);
-            }
-        }
-
-        @Override
-        public Class<O> getOutputClass() {
-            return outputClass;
-        }
-
-        void sendValue(O val) {
-            if (val == null)
-                throw new NullPointerException("value");
-            out = true;
-            inputSet.forEach(input -> input.accept(val));
-            inputSet.forEach(input -> input.processInput());
-        }
-
-        @Override
-        public INode getHolder() {
-            return AbstractNode.this;
+        System.out.println(" Outputs:");
+        for (Entry<String, GraphConnection<?>> entry : outputs.entrySet()) {
+            System.out.println(" - " + entry.getKey() + " = " + entry.getValue());
         }
     }
 }

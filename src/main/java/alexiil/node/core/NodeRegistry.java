@@ -21,8 +21,7 @@ import java.util.Map.Entry;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import alexiil.node.core.INode.IInput;
-import alexiil.node.core.INode.IOutput;
+import alexiil.node.core.NodeGraph.GraphConnection;
 
 public final class NodeRegistry {
     private final Map<String, Map<Class<?>, INode>> nodeRegistry = Maps.newHashMap();
@@ -39,7 +38,7 @@ public final class NodeRegistry {
         INode node = map.get(clazz);
         if (node == null)
             return null;
-        return node.createCopy();
+        return node.createCopy(null);
     }
 
     public void registerNodeType(String tag, INode node) {
@@ -61,7 +60,7 @@ public final class NodeRegistry {
     public <V> INode createNodeValue(V val, Class<V> clazz) {
         if (nodeValueTypes.containsKey(clazz)) {
             INodeFactory<V> factory = (INodeFactory<V>) nodeValueTypes.get(clazz);
-            return factory.createNode(val);
+            return factory.createNode(null, val);
         }
         throw new IllegalArgumentException("");
     }
@@ -82,11 +81,11 @@ public final class NodeRegistry {
             for (Entry<Class<?>, INode> entry2 : entry.getValue().entrySet()) {
                 builder.append("d " + tagIndex + " " + classes.indexOf(entry2.getKey()) + "\n");
                 INode node = entry2.getValue();
-                for (Entry<String, ? extends IInput<?>> in : node.getInputs().entrySet()) {
-                    builder.append("i " + nodeIndex + " " + in.getKey() + " " + classes.indexOf(in.getValue().getInputClass()));
+                for (Entry<String, GraphConnection<?>> in : node.getInputs().entrySet()) {
+                    builder.append("i " + nodeIndex + " " + in.getKey() + " " + classes.indexOf(in.getValue().getTypeClass()));
                 }
-                for (Entry<String, ? extends IOutput<?>> out : node.getOutputs().entrySet()) {
-                    builder.append("o " + nodeIndex + " " + out.getKey() + " " + classes.indexOf(out.getValue().getOutputClass()));
+                for (Entry<String, GraphConnection<?>> out : node.getOutputs().entrySet()) {
+                    builder.append("o " + nodeIndex + " " + out.getKey() + " " + classes.indexOf(out.getValue().getTypeClass()));
                 }
                 nodeIndex++;
             }

@@ -17,6 +17,7 @@ import com.google.common.base.Supplier;
 
 import alexiil.node.core.AbstractNode;
 import alexiil.node.core.Consumer;
+import alexiil.node.core.NodeGraph;
 
 /** Takes 2 inputs and produces 1 output. */
 public abstract class SimpleMathNode<N extends Number> extends AbstractNode {
@@ -24,7 +25,8 @@ public abstract class SimpleMathNode<N extends Number> extends AbstractNode {
     private final Supplier<N> itB;
     private final Consumer<N> out;
 
-    public SimpleMathNode(Class<N> clazz) {
+    public SimpleMathNode(NodeGraph graph, Class<N> clazz) {
+        super(graph);
         addInput("a", clazz);
         addInput("b", clazz);
         addOutput("ans", clazz);
@@ -34,11 +36,12 @@ public abstract class SimpleMathNode<N extends Number> extends AbstractNode {
     }
 
     @Override
-    protected void computeNext() {
+    protected boolean computeNext() {
         N a = itA.get();
         N b = itB.get();
         hasComputed = name;
         out.accept(apply(a, b));
+        return true;
     }
 
     protected abstract N apply(N a, N b);
@@ -47,7 +50,11 @@ public abstract class SimpleMathNode<N extends Number> extends AbstractNode {
         private final LongApplier applier;
 
         public LongNode(LongApplier applier) {
-            super(Long.class);
+            this(null, applier);
+        }
+
+        public LongNode(NodeGraph graph, LongApplier applier) {
+            super(graph, Long.class);
             this.applier = applier;
         }
 
@@ -57,8 +64,8 @@ public abstract class SimpleMathNode<N extends Number> extends AbstractNode {
         }
 
         @Override
-        public AbstractNode createCopy() {
-            return new LongNode(applier);
+        public AbstractNode createCopy(NodeGraph graph) {
+            return new LongNode(graph, applier);
         }
 
         public interface LongApplier {
@@ -70,7 +77,11 @@ public abstract class SimpleMathNode<N extends Number> extends AbstractNode {
         private final DoubleApplier applier;
 
         public DoubleNode(DoubleApplier applier) {
-            super(Double.class);
+            this(null, applier);
+        }
+
+        public DoubleNode(NodeGraph graph, DoubleApplier applier) {
+            super(graph, Double.class);
             this.applier = applier;
         }
 
@@ -80,8 +91,8 @@ public abstract class SimpleMathNode<N extends Number> extends AbstractNode {
         }
 
         @Override
-        public AbstractNode createCopy() {
-            return new DoubleNode(applier);
+        public AbstractNode createCopy(NodeGraph graph) {
+            return new DoubleNode(graph, applier);
         }
 
         public interface DoubleApplier {
