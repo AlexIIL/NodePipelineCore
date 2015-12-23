@@ -10,7 +10,7 @@
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public License along with this library; if not, download
- * the contets of https://raw.githubusercontent.com/AlexIIL/NodePipelineCore/master/LICENSE */
+ * the contents of https://raw.githubusercontent.com/AlexIIL/NodePipelineCore/master/LICENSE */
 package alexiil.node.core;
 
 import java.util.*;
