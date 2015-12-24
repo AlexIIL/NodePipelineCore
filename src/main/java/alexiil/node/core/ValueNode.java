@@ -24,11 +24,14 @@ public class ValueNode<N> extends AbstractNode implements INodeFactory<N> {
     private final GraphConnection<N> connection;
 
     public ValueNode(Supplier<N> supplier, Class<N> clazz) {
-        this(null, supplier, clazz);
+        this.supplier = supplier;
+        out = null;
+        this.clazz = clazz;
+        connection = null;
     }
 
-    public ValueNode(NodeGraph graph, Supplier<N> supplier, Class<N> clazz) {
-        super(graph);
+    public ValueNode(NodeGraph graph, Supplier<N> supplier, Class<N> clazz, String name) {
+        super(graph, name);
         this.supplier = supplier;
         this.clazz = clazz;
         connection = addOutput("val", clazz);
@@ -37,13 +40,13 @@ public class ValueNode<N> extends AbstractNode implements INodeFactory<N> {
     }
 
     @Override
-    public ValueNode<N> createCopy(NodeGraph graph) {
-        return new ValueNode<N>(graph, supplier, clazz);
+    public ValueNode<N> createCopy(NodeGraph graph, String name) {
+        return new ValueNode<N>(graph, supplier, clazz, name);
     }
 
     @Override
-    public INode createNode(NodeGraph graph, N value) {
-        return new ValueNode<N>(graph, () -> value, clazz);
+    public INode createNode(N value) {
+        return new ValueNode<N>(() -> value, clazz);
     }
 
     @Override
@@ -51,7 +54,6 @@ public class ValueNode<N> extends AbstractNode implements INodeFactory<N> {
         System.out.println("Computing " + connection.getRequestedElements() + " values");
         boolean ret = connection.getRequestedElements() > 0;
         while (connection.getRequestedElements() > 0) {
-            hasComputed = name;
             out.accept(supplier.get());
         }
         return ret;

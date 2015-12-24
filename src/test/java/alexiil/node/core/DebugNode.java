@@ -21,12 +21,15 @@ public class DebugNode extends AbstractNode {
     private final Consumer<String> logger;
     private final Supplier<Object> itVal;
 
+    public static final DebugNode usingSystemOut = new DebugNode(System.out::println);
+
     public DebugNode(Consumer<String> logger) {
-        this(null, logger);
+        this.logger = logger;
+        itVal = null;
     }
 
-    public DebugNode(NodeGraph graph, Consumer<String> logger) {
-        super(graph);
+    public DebugNode(NodeGraph graph, Consumer<String> logger, String name) {
+        super(graph, name);
         this.logger = logger;
         addInput("val", Object.class);
         itVal = getInputSupplier("val");
@@ -34,17 +37,16 @@ public class DebugNode extends AbstractNode {
 
     @Override
     protected boolean computeNext() {
-        hasComputed = name;
         try {
-            logger.accept(name + ": " + itVal.get().toString());
+            logger.accept(getName() + ": " + itVal.get().toString());
         } catch (Throwable t) {
-            throw new IllegalStateException("Could not GET for " + name, t);
+            throw new IllegalStateException("Could not GET for " + getName(), t);
         }
         return false;
     }
 
     @Override
-    public AbstractNode createCopy(NodeGraph graph) {
-        return new DebugNode(graph, logger);
+    public AbstractNode createCopy(NodeGraph graph, String name) {
+        return new DebugNode(graph, logger, name);
     }
 }

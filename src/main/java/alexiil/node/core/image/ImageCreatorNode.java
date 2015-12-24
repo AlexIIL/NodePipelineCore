@@ -25,5 +25,4 @@ public class ImageCreatorNode extends AbstractNode {
     protected boolean computeNext() {
         return false;
     }
-
 }

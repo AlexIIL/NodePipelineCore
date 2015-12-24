@@ -1,6 +1,4 @@
-/* Node Pipeline.
- *
- * Copyright (C) 2015 Alex Jones (AlexIIL)
+/* Copyright (C) 2015 Alex Jones (AlexIIL)
  *
  * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
  * Public License as published by the Free Software Foundation; with version 2.1 of the License.

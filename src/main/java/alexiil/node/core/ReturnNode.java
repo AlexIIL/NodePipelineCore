@@ -23,24 +23,25 @@ public class ReturnNode<V> extends AbstractNode implements Supplier<V> {
     private final GraphConnection<V> connection;
 
     public ReturnNode(Class<V> clazz) {
-        this(null, clazz);
+        this.clazz = clazz;
+        in = null;
+        connection = null;
     }
 
-    public ReturnNode(NodeGraph graph, Class<V> clazz) {
-        super(graph);
+    public ReturnNode(NodeGraph graph, Class<V> clazz, String name) {
+        super(graph, name);
         this.clazz = clazz;
         connection = addInput("val", clazz);
         in = getInputSupplier("val");
     }
 
     @Override
-    public AbstractNode createCopy(NodeGraph graph) {
-        return new ReturnNode<V>(graph, clazz);
+    public AbstractNode createCopy(NodeGraph graph, String name) {
+        return new ReturnNode<V>(graph, clazz, name);
     }
 
     @Override
     protected boolean computeNext() {
-        hasComputed = name;
         return false;
     }
 
@@ -51,7 +52,7 @@ public class ReturnNode<V> extends AbstractNode implements Supplier<V> {
             getGraph().iterate();
             return in.get();
         } catch (Throwable t) {
-            throw new IllegalStateException("Could not GET for " + name, t);
+            throw new IllegalStateException("Could not GET for " + getName(), t);
         }
     }
 }

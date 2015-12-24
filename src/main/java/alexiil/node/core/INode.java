@@ -18,8 +18,9 @@ import java.util.Map;
 import alexiil.node.core.NodeGraph.GraphConnection;
 
 public interface INode {
-    /** Creates a copy of this node with all of its outputs disconnected from any inputs. */
-    INode createCopy(NodeGraph graph);
+    /** Creates a copy of this node with all of its outputs disconnected from any inputs. 
+     * @param name TODO*/
+    INode createCopy(NodeGraph graph, String name);
 
     /** @return A map (most likely immutable or unmodifiable) that contains all of the inputs this has. */
     Map<String, GraphConnection<?>> getInputs();
@@ -28,6 +29,10 @@ public interface INode {
     Map<String, GraphConnection<?>> getOutputs();
 
     NodeGraph getGraph();
+
+    /** Gets the name for this node- it is used for comments and linking nodes with JSON so it must be unique within the
+     * graph */
+    String getName();
 
     /** Computes the outputs of this node if it has all of the inputs
      * 

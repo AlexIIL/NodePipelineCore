@@ -31,14 +31,14 @@ public final class NodeRegistry {
         return nodeRegistry.containsKey(tag);
     }
 
-    public INode getNodeType(String tag, Class<?> clazz) {
+    public INode getNodeType(String tag, Class<?> clazz, String name) {
         Map<Class<?>, INode> map = nodeRegistry.get(tag);
         if (map == null)
             return null;
         INode node = map.get(clazz);
         if (node == null)
             return null;
-        return node.createCopy(null);
+        return node.createCopy(null, name);
     }
 
     public void registerNodeType(String tag, INode node) {
@@ -60,11 +60,12 @@ public final class NodeRegistry {
     public <V> INode createNodeValue(V val, Class<V> clazz) {
         if (nodeValueTypes.containsKey(clazz)) {
             INodeFactory<V> factory = (INodeFactory<V>) nodeValueTypes.get(clazz);
-            return factory.createNode(null, val);
+            return factory.createNode(val);
         }
         throw new IllegalArgumentException("");
     }
 
+    /** This writes out all of the definitions of nodes and value nodes into a text file, as JSON */
     public String writeDefinitions() {
         StringBuilder builder = new StringBuilder();
         List<Class<?>> classes = Lists.newArrayList();

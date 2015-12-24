@@ -28,22 +28,24 @@ public abstract class AbstractNode implements INode {
     private final Map<String, GraphConnection<?>> inputs, unmodifiableInputs;
     private final Map<String, GraphConnection<?>> outputs, unmodifiableOutputs;
     private final NodeGraph graph;
-
-    // DEBUG!
-    public String hasComputed = null;
-    // DEBUG
-    public String name;
+    private final String name;
 
     public AbstractNode() {
-        this(null);
+        this(null, "default-type");
     }
 
-    public AbstractNode(NodeGraph graph) {
+    public AbstractNode(NodeGraph graph, String name) {
         this.graph = graph;
+        this.name = name;
         inputs = Maps.newHashMap();
         outputs = Maps.newHashMap();
         unmodifiableInputs = Collections.unmodifiableMap(inputs);
         unmodifiableOutputs = Collections.unmodifiableMap(outputs);
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 
     @Override
@@ -57,7 +59,7 @@ public abstract class AbstractNode implements INode {
     }
 
     @Override
-    public AbstractNode createCopy(NodeGraph graph) {
+    public AbstractNode createCopy(NodeGraph graph, String name) {
         throw new IllegalStateException("The subclass " + getClass() + " should override the createCopy method!");
     }
 

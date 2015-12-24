@@ -13,6 +13,7 @@
  * the contents of https://raw.githubusercontent.com/AlexIIL/NodePipelineCore/master/LICENSE */
 package alexiil.node.core;
 
+import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 
@@ -28,8 +29,12 @@ public class NodeGraph {
 
     private boolean isIterating = false;
 
-    public <N extends INode> N addCopyOf(N node) {
-        INode copy = node.createCopy(this);
+    List<INode> getNodes() {
+        return Collections.unmodifiableList(nodes);
+    }
+
+    public <N extends INode> N addCopyOf(N node, String name) {
+        INode copy = node.createCopy(this, name);
         addNode(copy);
         return (N) copy;
     }
@@ -72,9 +77,11 @@ public class NodeGraph {
 
     public void printState() {
         for (INode node : nodes) {
-            AbstractNode abs = (AbstractNode) node;
-            System.out.println("Node #" + nodes.indexOf(node) + " called " + abs.name);
-            abs.printState();
+            System.out.println("Node #" + nodes.indexOf(node) + " called " + node.getName());
+            if (node instanceof AbstractNode) {
+                AbstractNode abs = (AbstractNode) node;
+                abs.printState();
+            }
         }
     }
 
@@ -149,7 +156,7 @@ public class NodeGraph {
 
         public void push(E val) {
             String call = connectedOutput == null ? "output" : "input";
-            System.out.println("State of " + call + " " + name + " for node " + (((AbstractNode) node).name) + " before pushing");
+            System.out.println("State of " + call + " " + name + " for node " + node.getName() + " before pushing");
             ((AbstractNode) node).printState();
             if (requested > 0) {
                 requested--;
@@ -161,7 +168,7 @@ public class NodeGraph {
             } else {
                 internalDeque.push(val);
             }
-            System.out.println("State of " + call + " " + name + " for node " + (((AbstractNode) node).name) + " AFTER pushing");
+            System.out.println("State of " + call + " " + name + " for node " + node.getName() + " AFTER pushing");
             ((AbstractNode) node).printState();
         }
 
@@ -182,12 +189,12 @@ public class NodeGraph {
         /** Requests that the number of elements be available to use */
         public void requestUpTo(int count) {
             String call = connectedOutput == null ? "output" : "input";
-            System.out.println("State of " + call + " " + name + " for node " + (((AbstractNode) node).name) + " before requesting " + count);
+            System.out.println("State of " + call + " " + name + " for node " + node.getName() + " before requesting " + count);
             ((AbstractNode) node).printState();
 
             requested = Math.max(requested, count - getRemainingElements());
 
-            System.out.println("State of " + call + " " + name + " for node " + (((AbstractNode) node).name) + " AFTER requesting " + count);
+            System.out.println("State of " + call + " " + name + " for node " + node.getName() + " AFTER requesting " + count);
             ((AbstractNode) node).printState();
         }
 
