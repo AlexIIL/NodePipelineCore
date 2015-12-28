@@ -106,7 +106,7 @@ public class MathNodes {
 
         @Override
         public NodeValueDouble createCopy(NodeGraph graph, String name) {
-            return new NodeValueDouble(getTypeTag(), getGraph(), value, name);
+            return new NodeValueDouble(getTypeTag(), graph, value, name);
         }
     }
 }

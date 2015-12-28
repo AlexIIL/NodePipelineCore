@@ -3,6 +3,7 @@
  * See the file "LICENSE" for copying permission. */
 package alexiil.node.core;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
@@ -39,24 +40,42 @@ public class NodeGraph {
         nodes.add(node);
     }
 
-    public void connectIO(INode fromNode, String fromName, INode toNode, String toName) {
-        if (nodes.contains(fromNode) && nodes.contains(toNode)) {
-            if (nodes.indexOf(fromNode) >= nodes.indexOf(toNode))
-                throw new IllegalArgumentException("Bad order!");
-            if (!fromNode.getOutputs().containsKey(fromName))
-                throw new IllegalArgumentException("Did not contain the output key " + fromName);
-            if (!toNode.getInputs().containsKey(toName))
-                throw new IllegalArgumentException("Did not contain the input key " + toName);
-
-            // Ignore the generic type warning, its fine :)
-            GraphConnection out = fromNode.getOutputs().get(fromName);
-            GraphConnection in = toNode.getInputs().get(toName);
-            // Basically if (out instanceof in)
-            if (in.getTypeClass().isAssignableFrom(out.getTypeClass()))
-                connect(out, in, in.getTypeClass());
-            else
-                throw new IllegalArgumentException("The nodes did not share a common class!");
+    public INode getNode(String name) {
+        for (INode node : nodes) {
+            if (node.getName().equals(name))
+                return node;
         }
+        return null;
+    }
+
+    /** @param node The node to check
+     * @throws IllegalArgumentException if the node was invalid */
+    private void checkNode(INode node, String name) throws IllegalArgumentException {
+        if (node == null)
+            throw new NullPointerException(name + " was null!");
+        if (!nodes.contains(node))
+            throw new IllegalArgumentException("Did not contain " + node.getName() + " for " + name);
+    }
+
+    public void connectIO(INode fromNode, String fromName, INode toNode, String toName) {
+        checkNode(fromNode, "fromNode");
+        checkNode(toNode, "toNode");
+
+        if (nodes.indexOf(fromNode) >= nodes.indexOf(toNode))
+            throw new IllegalArgumentException("Bad order!");
+        if (!fromNode.getOutputs().containsKey(fromName))
+            throw new IllegalArgumentException("Did not contain the output key " + fromName);
+        if (!toNode.getInputs().containsKey(toName))
+            throw new IllegalArgumentException("Did not contain the input key " + toName);
+
+        // Ignore the generic type warning, its fine :)
+        GraphConnection out = fromNode.getOutputs().get(fromName);
+        GraphConnection in = toNode.getInputs().get(toName);
+        // Basically if (out instanceof in)
+        if (in.getTypeClass().isAssignableFrom(out.getTypeClass()))
+            connect(out, in, in.getTypeClass());
+        else
+            throw new IllegalArgumentException("The nodes did not share a common class!");
     }
 
     private <T> void connect(GraphConnection<? extends T> out, GraphConnection<T> in, Class<T> typeClass) {
@@ -198,7 +217,13 @@ public class NodeGraph {
 
         @Override
         public String toString() {
-            return "requested = " + requested + ", elements = " + internalDeque;
+            String out = (connectedOutput == null ? "null" : connectedOutput.node.getName() + "." + connectedOutput.name);
+
+            String[] ins = new String[connectedInputs.size()];
+            for (int i = 0; i < ins.length; i++) {
+                ins[i] = connectedInputs.get(i).node.getName() + "." + connectedInputs.get(i).name;
+            }
+            return "requested = " + requested + ", input = " + out + ", outputs = " + Arrays.toString(ins) + ", elements = " + internalDeque;
         }
     }
 }

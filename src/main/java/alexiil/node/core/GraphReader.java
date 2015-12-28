@@ -70,7 +70,7 @@ public class GraphReader {
         }
 
         static boolean isValid(int flags) {
-            return flags - (flags & maxFlag) != 0;
+            return flags - (flags & maxFlag) == 0;
         }
     }
 
@@ -101,7 +101,7 @@ public class GraphReader {
         }
 
         if (!Flag.isValid(flags))
-            throw new IOException("Found extra flags!");
+            throw new IOException("Found extra flags! (" + Integer.toBinaryString(flags) + ")");
 
         // Get the correct reader for the given version
         SaveType type = typeMap.get(version);
