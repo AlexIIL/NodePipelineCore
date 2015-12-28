@@ -1,40 +1,30 @@
-/* Node Pipeline.
+/* Copyright (c) 2015 AlexIIL
  *
- * Copyright (C) 2015 Alex Jones (AlexIIL)
- *
- * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
- * Public License as published by the Free Software Foundation; with version 2.1 of the License.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public License along with this library; if not, download
- * the contents of https://raw.githubusercontent.com/AlexIIL/NodePipelineCore/master/LICENSE */
+ * See the file "LICENSE" for copying permission. */
 package alexiil.node.core.test;
 
 import org.junit.Test;
 
-import alexiil.node.core.*;
+import alexiil.node.core.DebugNode;
+import alexiil.node.core.INode;
+import alexiil.node.core.NodeGraph;
+import alexiil.node.core.ReturnNode;
 import alexiil.node.core.math.MathNodes;
 import alexiil.node.core.math.SimpleMathNode.LongNode;
 
 public class MathTester {
     @Test
     public void testComplexMathGraph() {
-        NodeRegistry reg = new NodeRegistry();
-        MathNodes.populateRegistry(reg);
-
         NodeGraph graph = new NodeGraph();
-        INode oneNode = graph.addCopyOf(new ValueNode<>(() -> 1L, Long.class), "1");
-        INode fourNode = graph.addCopyOf(new ValueNode<>(() -> 4L, Long.class), "4");
-        INode twoNode = graph.addCopyOf(new ValueNode<>(() -> 2L, Long.class), "2");
+        INode oneNode = graph.addCopyOf(MathNodes.longCreator.createNode(1L), "1");
+        INode fourNode = graph.addCopyOf(MathNodes.longCreator.createNode(4L), "4");
+        INode twoNode = graph.addCopyOf(MathNodes.longCreator.createNode(2L), "2");
         LongNode firstAdder = graph.addCopyOf(MathNodes.longAdder, "firstAdder");
 
         graph.connectIO(oneNode, "val", firstAdder, "a");
         graph.connectIO(fourNode, "val", firstAdder, "b");
 
-        LongNode subtractor = graph.addCopyOf(MathNodes.longSubtracter, "subtractor");
+        LongNode subtractor = graph.addCopyOf(MathNodes.longSubtractor, "subtractor");
 
         graph.connectIO(fourNode, "val", subtractor, "a");
         graph.connectIO(twoNode, "val", subtractor, "b");
@@ -60,7 +50,7 @@ public class MathTester {
         graph.connectIO(forthAdder, "ans", fifthAdder, "b");
 
         DebugNode debugNode = graph.addCopyOf(DebugNode.usingSystemOut, "debug");
-        ReturnNode<Long> returnNode = graph.addCopyOf(new ReturnNode<>(Long.class), "return");
+        ReturnNode<Long> returnNode = graph.addCopyOf(MathNodes.longReturner, "return");
 
         graph.connectIO(fifthAdder, "ans", debugNode, "val");
         graph.connectIO(fifthAdder, "ans", returnNode, "val");

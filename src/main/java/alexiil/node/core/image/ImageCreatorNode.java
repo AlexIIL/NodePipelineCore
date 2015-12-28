@@ -1,32 +1,38 @@
-/* Node Pipeline.
+/* Copyright (c) 2015 AlexIIL
  *
- * Copyright (C) 2015 Alex Jones (AlexIIL)
- *
- * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
- * Public License as published by the Free Software Foundation; with version 2.1 of the License.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public License along with this library; if not, download
- * the contents of https://raw.githubusercontent.com/AlexIIL/NodePipelineCore/master/LICENSE */
+ * See the file "LICENSE" for copying permission. */
 package alexiil.node.core.image;
 
 import alexiil.node.core.AbstractNode;
+import alexiil.node.core.NodeGraph;
+import alexiil.node.core.NodeRegistry;
 
+/** Created on 28 Dec 2015
+ *
+ * @author AlexIIL */
 public class ImageCreatorNode extends AbstractNode {
 
     // private final Iterator<Long> sizeX;
     // private final Iterator<Long> sizeY;
     // private final Consumer<BufferedImage> img;
 
-    public ImageCreatorNode() {
-        super(registry);
+    public ImageCreatorNode(NodeRegistry registry, String typeTag, NodeGraph graph, String name) {
+        super(registry, typeTag, graph, name);
+        // TODO Auto-generated constructor stub
+    }
+
+    public ImageCreatorNode(NodeRegistry registry, String typeTag) {
+        super(registry, typeTag);
+        // TODO Auto-generated constructor stub
     }
 
     @Override
     protected boolean computeNext() {
         return false;
+    }
+
+    @Override
+    public ImageCreatorNode createCopy(NodeGraph graph, String name) {
+        return null;
     }
 }

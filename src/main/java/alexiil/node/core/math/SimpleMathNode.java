@@ -1,36 +1,29 @@
-/* Node Pipeline.
+/* Copyright (c) 2015 AlexIIL
  *
- * Copyright (C) 2015 Alex Jones (AlexIIL)
- *
- * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
- * Public License as published by the Free Software Foundation; with version 2.1 of the License.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public License along with this library; if not, download
- * the contents of https://raw.githubusercontent.com/AlexIIL/NodePipelineCore/master/LICENSE */
+ * See the file "LICENSE" for copying permission. */
 package alexiil.node.core.math;
+
+import java.util.function.Consumer;
 
 import com.google.common.base.Supplier;
 
 import alexiil.node.core.AbstractNode;
-import alexiil.node.core.Consumer;
 import alexiil.node.core.NodeGraph;
+import alexiil.node.core.NodeRegistry;
 
 /** Takes 2 inputs and produces 1 output. */
 public abstract class SimpleMathNode<N extends Number> extends AbstractNode {
     private final Supplier<N> inA, inB;
     private final Consumer<N> out;
 
-    public SimpleMathNode() {
+    public SimpleMathNode(NodeRegistry registry, String typeTag) {
+        super(registry, typeTag);
         inA = inB = null;
         out = null;
     }
 
-    public SimpleMathNode(NodeGraph graph, Class<N> clazz, String name) {
-        super(graph, name);
+    public SimpleMathNode(NodeRegistry registry, String typeTag, NodeGraph graph, Class<N> clazz, String name) {
+        super(registry, typeTag, graph, name);
         addInput("a", clazz);
         addInput("b", clazz);
         addOutput("ans", clazz);
@@ -52,12 +45,13 @@ public abstract class SimpleMathNode<N extends Number> extends AbstractNode {
     public static class LongNode extends SimpleMathNode<Long> {
         private final LongApplier applier;
 
-        public LongNode(LongApplier applier) {
+        public LongNode(NodeRegistry registry, String typeTag, LongApplier applier) {
+            super(registry, typeTag);
             this.applier = applier;
         }
 
-        public LongNode(NodeGraph graph, LongApplier applier, String name) {
-            super(graph, Long.class, name);
+        public LongNode(NodeRegistry registry, String typeTag, NodeGraph graph, LongApplier applier, String name) {
+            super(registry, typeTag, graph, Long.class, name);
             this.applier = applier;
         }
 
@@ -68,7 +62,7 @@ public abstract class SimpleMathNode<N extends Number> extends AbstractNode {
 
         @Override
         public AbstractNode createCopy(NodeGraph graph, String name) {
-            return new LongNode(graph, applier, name);
+            return new LongNode(getRegistry(), getTypeTag(), graph, applier, name);
         }
 
         public interface LongApplier {
@@ -79,12 +73,13 @@ public abstract class SimpleMathNode<N extends Number> extends AbstractNode {
     public static class DoubleNode extends SimpleMathNode<Double> {
         private final DoubleApplier applier;
 
-        public DoubleNode(DoubleApplier applier) {
+        public DoubleNode(NodeRegistry registry, String typeTag, DoubleApplier applier) {
+            super(registry, typeTag);
             this.applier = applier;
         }
 
-        public DoubleNode(NodeGraph graph, DoubleApplier applier, String name) {
-            super(graph, Double.class, name);
+        public DoubleNode(NodeRegistry registry, String typeTag, NodeGraph graph, DoubleApplier applier, String name) {
+            super(registry, typeTag, graph, Double.class, name);
             this.applier = applier;
         }
 
@@ -95,7 +90,7 @@ public abstract class SimpleMathNode<N extends Number> extends AbstractNode {
 
         @Override
         public AbstractNode createCopy(NodeGraph graph, String name) {
-            return new DoubleNode(graph, applier, name);
+            return new DoubleNode(getRegistry(), getTypeTag(), graph, applier, name);
         }
 
         public interface DoubleApplier {

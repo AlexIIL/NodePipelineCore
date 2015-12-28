@@ -1,66 +1,57 @@
-/* Node Pipeline.
+/* Copyright (c) 2015 AlexIIL
  *
- * Copyright (C) 2015 Alex Jones (AlexIIL)
- *
- * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
- * Public License as published by the Free Software Foundation; with version 2.1 of the License.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public License along with this library; if not, download
- * the contents of https://raw.githubusercontent.com/AlexIIL/NodePipelineCore/master/LICENSE */
+ * See the file "LICENSE" for copying permission. */
 package alexiil.node.core.math;
 
-import alexiil.node.core.*;
+import alexiil.node.core.NodeGraph;
+import alexiil.node.core.NodeRegistry;
+import alexiil.node.core.ReturnNode;
+import alexiil.node.core.ValueNode;
 import alexiil.node.core.math.SimpleMathNode.DoubleNode;
 import alexiil.node.core.math.SimpleMathNode.LongNode;
 
+/** Stores all mathematical nodes: input, creation, modification and returning. Handles {@link Long} and {@link Double}
+ * 
+ * Created on 28 Dec 2015
+ *
+ * @author AlexIIL */
 public class MathNodes {
-    public static final SimpleMathNode.LongNode longAdder = new LongNode((a, b) -> a + b);
-    public static final SimpleMathNode.LongNode longSubtracter = new LongNode((a, b) -> a - b);
-    public static final SimpleMathNode.LongNode longMultiplier = new LongNode((a, b) -> a * b);
-    public static final SimpleMathNode.LongNode longDivider = new LongNode((a, b) -> a / b);
-
-    public static final SimpleMathNode.DoubleNode doubleAdder = new DoubleNode((a, b) -> a + b);
-    public static final SimpleMathNode.DoubleNode doubleSubtracter = new DoubleNode((a, b) -> a - b);
-    public static final SimpleMathNode.DoubleNode doubleMultiplier = new DoubleNode((a, b) -> a * b);
-    public static final SimpleMathNode.DoubleNode doubleDivider = new DoubleNode((a, b) -> a / b);
-    public static final SimpleMathNode.DoubleNode doublePower = new DoubleNode((a, b) -> Math.pow(a, b));
-
     public static final NodeRegistry mathRegistry = new NodeRegistry("math");
 
+    public static final ValueNode<Long> longCreator;
+    // public static final InputNode<Long> longInput;
+    public static final ReturnNode<Long> longReturner;
+    public static final SimpleMathNode.LongNode longAdder;
+    public static final SimpleMathNode.LongNode longSubtractor;
+    public static final SimpleMathNode.LongNode longMultiplier;
+    public static final SimpleMathNode.LongNode longDivider;
+
+    public static final ValueNode<Double> doubleCreator;
+    // public static final InputNode<Double> doubleInput;
+    public static final ReturnNode<Double> doubleReturner;
+    public static final SimpleMathNode.DoubleNode doubleAdder;
+    public static final SimpleMathNode.DoubleNode doubleSubtractor;
+    public static final SimpleMathNode.DoubleNode doubleMultiplier;
+    public static final SimpleMathNode.DoubleNode doubleDivider;
+    public static final SimpleMathNode.DoubleNode doublePower;
+
     static {
-        mathRegistry.registerNodeType(new NodeValueLong("LongCreate", 0L));
-        mathRegistry.registerNodeType(new ValueNode<Double>(mathRegistry, "", 0.0, Double.class) {
+        mathRegistry.registerNodeType(longCreator = new NodeValueLong("LongCreate", 0L));
+        // mathRegistry.registerNodeType(longInput = new InputNode<>(mathRegistry, "LongInput", Long.class));
+        mathRegistry.registerNodeType(longReturner = new ReturnNode<>(mathRegistry, "LongReturn", Long.class));
+        mathRegistry.registerNodeType(longAdder = new LongNode(mathRegistry, "LongAdder", (a, b) -> a + b));
+        mathRegistry.registerNodeType(longSubtractor = new LongNode(mathRegistry, "LongSubtractor", (a, b) -> a - b));
+        mathRegistry.registerNodeType(longMultiplier = new LongNode(mathRegistry, "LongMultiplier", (a, b) -> a * b));
+        mathRegistry.registerNodeType(longDivider = new LongNode(mathRegistry, "LongDivider", (a, b) -> a / b));
 
-            @Override
-            public INode createNode(Double value) {
-                return null;
-            }
-
-            @Override
-            public INodeAdditionalData modify(String[] additionalData) {
-                return null;
-            }
-
-            @Override
-            public AbstractNode createCopy(NodeGraph graph, String name) {
-                return null;
-            }
-        });
-
-        mathRegistry.registerNodeType(longAdder);
-        mathRegistry.registerNodeType(longSubtracter);
-        mathRegistry.registerNodeType(longMultiplier);
-        mathRegistry.registerNodeType(longDivider);
-
-        mathRegistry.registerNodeType(doubleAdder);
-        mathRegistry.registerNodeType(doubleSubtracter);
-        mathRegistry.registerNodeType(doubleMultiplier);
-        mathRegistry.registerNodeType(doubleDivider);
-        mathRegistry.registerNodeType(doublePower);
+        mathRegistry.registerNodeType(doubleCreator = new NodeValueDouble("DoubleCreate", 0.0));
+        // mathRegistry.registerNodeType(doubleInput = new InputNode<>(mathRegistry, "DoubleInput", Double.class));
+        mathRegistry.registerNodeType(doubleReturner = new ReturnNode<>(mathRegistry, "DoubleReturn", Double.class));
+        mathRegistry.registerNodeType(doubleAdder = new DoubleNode(mathRegistry, "DoubleAdder", (a, b) -> a + b));
+        mathRegistry.registerNodeType(doubleSubtractor = new DoubleNode(mathRegistry, "DoubleSubtractor", (a, b) -> a - b));
+        mathRegistry.registerNodeType(doubleMultiplier = new DoubleNode(mathRegistry, "DoubleMultiplier", (a, b) -> a * b));
+        mathRegistry.registerNodeType(doubleDivider = new DoubleNode(mathRegistry, "DoubleDivider", (a, b) -> a / b));
+        mathRegistry.registerNodeType(doublePower = new DoubleNode(mathRegistry, "DoublePower", (a, b) -> Math.pow(a, b)));
 
         mathRegistry.setImmutable();
     }
@@ -93,23 +84,29 @@ public class MathNodes {
     }
 
     private static class NodeValueDouble extends ValueNode<Double> {
-        private NodeValueDouble(NodeRegistry registry, String typeTag, double value) {
-            super(registry, typeTag, value, Double.class);
+        private NodeValueDouble(String typeTag, double value) {
+            super(mathRegistry, typeTag, value, Double.class);
+        }
+
+        private NodeValueDouble(String typeTag, NodeGraph graph, Double value, String name) {
+            super(mathRegistry, typeTag, graph, value, Double.class, name);
         }
 
         @Override
         public NodeValueDouble createNode(Double value) {
-            return null;
+            return new NodeValueDouble(getTypeTag(), value);
         }
 
         @Override
-        public INodeAdditionalData modify(String[] additionalData) {
-            return null;
+        public NodeValueDouble modify(String[] additionalData) {
+            String val = additionalData[0];
+            Double lVal = Double.valueOf(val);
+            return new NodeValueDouble(getTypeTag(), getGraph(), lVal, getName());
         }
 
         @Override
         public NodeValueDouble createCopy(NodeGraph graph, String name) {
-            return null;
+            return new NodeValueDouble(getTypeTag(), getGraph(), value, name);
         }
     }
 }
