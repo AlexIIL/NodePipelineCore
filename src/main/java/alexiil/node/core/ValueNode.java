@@ -13,40 +13,44 @@
  * the contents of https://raw.githubusercontent.com/AlexIIL/NodePipelineCore/master/LICENSE */
 package alexiil.node.core;
 
-import com.google.common.base.Supplier;
-
 import alexiil.node.core.NodeGraph.GraphConnection;
 
-public class ValueNode<N> extends AbstractNode implements INodeFactory<N> {
-    private final Supplier<N> supplier;
+/** Represents a simple value based creation node. This will repeatedly output a single value.
+ * 
+ * @author AlexIIL
+ *
+ * @param <N> The type of value to supply */
+public abstract class ValueNode<N> extends AbstractNode implements INodeFactory<N>, INodeAdditionalData {
+    protected final N value;
     private final Consumer<N> out;
     private final Class<N> clazz;
     private final GraphConnection<N> connection;
 
-    public ValueNode(Supplier<N> supplier, Class<N> clazz) {
-        this.supplier = supplier;
+    public ValueNode(NodeRegistry registry, String typeTag, N value, Class<N> clazz) {
+        super(registry, typeTag);
+        this.value = value;
         out = null;
         this.clazz = clazz;
         connection = null;
     }
 
-    public ValueNode(NodeGraph graph, Supplier<N> supplier, Class<N> clazz, String name) {
-        super(graph, name);
-        this.supplier = supplier;
+    public ValueNode(NodeRegistry registry, String typeTag, NodeGraph graph, N value, Class<N> clazz, String name) {
+        super(registry, typeTag, graph, name);
+        this.value = value;
         this.clazz = clazz;
         connection = addOutput("val", clazz);
         out = getOutputConsumer("val");
-        name = "Value " + supplier.get().toString();
+        name = "Value " + value.toString();
     }
 
     @Override
-    public ValueNode<N> createCopy(NodeGraph graph, String name) {
-        return new ValueNode<N>(graph, supplier, clazz, name);
+    public String[] addtionalData() {
+        return new String[] { value.toString() };
     }
 
     @Override
-    public INode createNode(N value) {
-        return new ValueNode<N>(() -> value, clazz);
+    public String[] dataKeys() {
+        return new String[] { "value" };
     }
 
     @Override
@@ -54,7 +58,7 @@ public class ValueNode<N> extends AbstractNode implements INodeFactory<N> {
         System.out.println("Computing " + connection.getRequestedElements() + " values");
         boolean ret = connection.getRequestedElements() > 0;
         while (connection.getRequestedElements() > 0) {
-            out.accept(supplier.get());
+            out.accept(value);
         }
         return ret;
     }

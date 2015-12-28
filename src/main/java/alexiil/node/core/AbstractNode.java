@@ -22,21 +22,35 @@ import com.google.common.collect.Maps;
 
 import alexiil.node.core.NodeGraph.GraphConnection;
 
-/** A simple, mutable node. Will automatically handle inputs and outputs for you, provided you handle cloning
- * properly. */
+/** A simple, mutable node. Will automatically handle inputs and outputs for you, provided you handle cloning properly.
+ * 
+ * This class is NOT thread safe. */
 public abstract class AbstractNode implements INode {
     private final Map<String, GraphConnection<?>> inputs, unmodifiableInputs;
     private final Map<String, GraphConnection<?>> outputs, unmodifiableOutputs;
     private final NodeGraph graph;
-    private final String name;
+    private final NodeRegistry registry;
+    private final String name, typeTag;
 
-    public AbstractNode() {
-        this(null, "default-type");
+    /** Creates an {@link AbstractNode} that will be registered with a single registry.
+     * 
+     * @param registry The registry that this was (or will be) registered with.
+     * @param typeTag The type tag that this was (or will be) registered with. */
+    public AbstractNode(NodeRegistry registry, String typeTag) {
+        this(registry, typeTag, null, "default-type");
     }
 
-    public AbstractNode(NodeGraph graph, String name) {
+    /** Creates an {@link AbstractNode} that will be added to a graph and used for only that graph.
+     * 
+     * @param registry The registry that this was (or will be) registered with.
+     * @param typeTag The type tag that this was (or will be) registered with.
+     * @param graph The graph that this node has been added to.
+     * @param name The graph-unique name that this will be identified with. */
+    public AbstractNode(NodeRegistry registry, String typeTag, NodeGraph graph, String name) {
         this.graph = graph;
+        this.registry = registry;
         this.name = name;
+        this.typeTag = typeTag;
         inputs = Maps.newHashMap();
         outputs = Maps.newHashMap();
         unmodifiableInputs = Collections.unmodifiableMap(inputs);
@@ -44,28 +58,36 @@ public abstract class AbstractNode implements INode {
     }
 
     @Override
-    public String getName() {
+    public final String getName() {
         return name;
     }
 
     @Override
-    public Map<String, GraphConnection<?>> getInputs() {
+    public final String getTypeTag() {
+        return typeTag;
+    }
+
+    @Override
+    public final Map<String, GraphConnection<?>> getInputs() {
         return unmodifiableInputs;
     }
 
     @Override
-    public Map<String, GraphConnection<?>> getOutputs() {
+    public final Map<String, GraphConnection<?>> getOutputs() {
         return unmodifiableOutputs;
     }
 
     @Override
-    public AbstractNode createCopy(NodeGraph graph, String name) {
-        throw new IllegalStateException("The subclass " + getClass() + " should override the createCopy method!");
+    public abstract AbstractNode createCopy(NodeGraph graph, String name);
+
+    @Override
+    public final NodeGraph getGraph() {
+        return graph;
     }
 
     @Override
-    public NodeGraph getGraph() {
-        return graph;
+    public final NodeRegistry getRegistry() {
+        return registry;
     }
 
     public <I> GraphConnection<I> addInput(String name, Class<I> inputType) {

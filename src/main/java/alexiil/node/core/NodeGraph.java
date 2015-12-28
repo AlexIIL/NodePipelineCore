@@ -154,6 +154,10 @@ public class NodeGraph {
             return clazz;
         }
 
+        public INode getNode() {
+            return node;
+        }
+
         public void push(E val) {
             String call = connectedOutput == null ? "output" : "input";
             System.out.println("State of " + call + " " + name + " for node " + node.getName() + " before pushing");
@@ -184,6 +188,10 @@ public class NodeGraph {
 
         public int getRequestedElements() {
             return requested;
+        }
+
+        public String getName() {
+            return name;
         }
 
         /** Requests that the number of elements be available to use */

@@ -22,14 +22,15 @@ public class ReturnNode<V> extends AbstractNode implements Supplier<V> {
     private final Supplier<V> in;
     private final GraphConnection<V> connection;
 
-    public ReturnNode(Class<V> clazz) {
+    public ReturnNode(NodeRegistry registry, String typeTag, Class<V> clazz) {
+        super(registry, typeTag);
         this.clazz = clazz;
         in = null;
         connection = null;
     }
 
-    public ReturnNode(NodeGraph graph, Class<V> clazz, String name) {
-        super(graph, name);
+    public ReturnNode(NodeRegistry registry, String typeTag, NodeGraph graph, Class<V> clazz, String name) {
+        super(registry, typeTag, graph, name);
         this.clazz = clazz;
         connection = addInput("val", clazz);
         in = getInputSupplier("val");
@@ -37,7 +38,7 @@ public class ReturnNode<V> extends AbstractNode implements Supplier<V> {
 
     @Override
     public AbstractNode createCopy(NodeGraph graph, String name) {
-        return new ReturnNode<V>(graph, clazz, name);
+        return new ReturnNode<V>(getRegistry(), getTypeTag(), graph, clazz, name);
     }
 
     @Override

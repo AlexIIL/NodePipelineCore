@@ -21,6 +21,10 @@ public class ImageCreatorNode extends AbstractNode {
     // private final Iterator<Long> sizeY;
     // private final Consumer<BufferedImage> img;
 
+    public ImageCreatorNode() {
+        super(registry);
+    }
+
     @Override
     protected boolean computeNext() {
         return false;
