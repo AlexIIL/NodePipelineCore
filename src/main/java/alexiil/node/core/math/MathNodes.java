@@ -79,7 +79,7 @@ public class MathNodes {
 
         @Override
         public NodeValueLong createCopy(NodeGraph graph, String name) {
-            return new NodeValueLong(getTypeTag(), getGraph(), value, name);
+            return new NodeValueLong(getTypeTag(), graph, value, name);
         }
     }
 
