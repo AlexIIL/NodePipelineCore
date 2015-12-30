@@ -3,7 +3,9 @@
  * See the file "LICENSE" for copying permission. */
 package alexiil.node.core;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.channels.Channels;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
@@ -74,9 +76,11 @@ public class GraphReader {
         }
     }
 
-    /** @param path
-     * @return
-     * @throws IOException */
+    /** Reads a node graph from a file given by an {@link Path}
+     * 
+     * @param path The path for the file to read from
+     * @return The read graph
+     * @throws IOException if anything goes wrong while reading from the file */
     public static NodeGraph readNodeGraph(Path path) throws IOException {
         SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ);
         InputStream stream = Channels.newInputStream(channel);
@@ -87,6 +91,11 @@ public class GraphReader {
         }
     }
 
+    /** Reads a node graph from a given {@link InputStream}
+     * 
+     * @param input The stream to read the graph from
+     * @return The read graph
+     * @throws IOException if anything goes wrong while reading from the stream */
     public static NodeGraph readNodeGraph(InputStream input) throws IOException {
         // Header reading
         int flags = input.read();
@@ -186,19 +195,11 @@ public class GraphReader {
     /** Reads the input in a manor that can be opened by a normal text file editor and understood by a human. (Quite a
      * lot of redundancy, good for debugging a graph itself.) */
     private static NodeGraph readBufferedStream(InputStream stream, int flags) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            // Read the line :)
-        }
-        return null;
+        throw new IOException("I don't know how to read!");
     }
 
     private static void writeBufferedStream(NodeGraph graph, OutputStream stream) throws IOException {
-        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(stream));
-        for (;;) {
-            // Write out the graph :)
-        }
+        throw new IOException("I don't know how to write!");
     }
 
     // VERSION 2- JSON TEXT
